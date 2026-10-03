@@ -1,0 +1,14 @@
+name: close-reason
+on:
+  issues:
+    types: [closed]
+permissions: {}
+jobs:
+  echo-reason:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Echo the close reason
+        env:
+          STATE_REASON: ${{ github.event.issue.state_reason }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: echo "issue=$ISSUE_NUMBER state_reason=$STATE_REASON"
