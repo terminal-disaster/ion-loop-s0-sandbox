@@ -1,0 +1,36 @@
+name: bot-pr
+# Opens a pull request authored by github-actions[bot], so the PR author is not the code owner.
+# Uses only the run's own short-lived GITHUB_TOKEN. Nothing is stored.
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Which folder the bot PR touches
+        type: choice
+        options: [sensitive, other]
+        required: true
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  open-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Commit a change on a new branch and open a PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET: ${{ inputs.target }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          BRANCH="bot-$TARGET-$RUN_ID"
+          git checkout -b "$BRANCH"
+          echo "bot change $RUN_ID" > "$TARGET/bot-$RUN_ID.txt"
+          git add -A
+          git commit -m "Bot PR: touch $TARGET/bot-$RUN_ID.txt"
+          git push origin "$BRANCH"
+          gh pr create --base main --head "$BRANCH" \
+            --title "Bot PR: touches $TARGET/ (author is github-actions[bot])" \
+            --body "Throwaway test PR for ion-loop S0 check 1. Author is not the code owner."
